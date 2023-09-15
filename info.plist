@@ -3,16 +3,66 @@
 <plist version="1.0">
 <dict>
 	<key>bundleid</key>
-	<string>de.heilerich.golink</string>
+	<string>de.heilerich.pubkey</string>
 	<key>category</key>
 	<string>Internet</string>
 	<key>connections</key>
 	<dict>
-		<key>44F48C5A-4E38-43FD-B5AA-E32B1F30669F</key>
+		<key>1FF6F071-79FF-4FFF-A51D-BB8DA9E14D5F</key>
 		<array>
 			<dict>
 				<key>destinationuid</key>
-				<string>C1A2DE7D-CC5E-4351-B48A-41EDAFCD9E4B</string>
+				<string>BC1815E3-308D-4BA9-82D4-5D0E3D0ABEB2</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>sourceoutputuid</key>
+				<string>94563ECC-A0BF-418B-A31E-6F8540BCA373</string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>3F2C92C5-FC2D-42EF-A622-6E966147BBD0</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>sourceoutputuid</key>
+				<string>94563ECC-A0BF-418B-A31E-6F8540BCA373</string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>C2FFD845-5693-49CC-96E2-D6EB911A26AC</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>3F2C92C5-FC2D-42EF-A622-6E966147BBD0</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>A9330347-42C0-4D6E-9A6A-E26D0F927139</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>73B58F39-DE72-4E9F-8667-1037E32A3058</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>1FF6F071-79FF-4FFF-A51D-BB8DA9E14D5F</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
@@ -25,13 +75,51 @@
 	<key>createdby</key>
 	<string>Felix Heilmeyer</string>
 	<key>description</key>
-	<string></string>
+	<string>Get SSH public keys from URL</string>
 	<key>disabled</key>
 	<false/>
 	<key>name</key>
-	<string>Golink</string>
+	<string>Pubkeys</string>
 	<key>objects</key>
 	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>argument</key>
+				<string>pub refresh</string>
+				<key>leftcursor</key>
+				<false/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.utility.showalfred</string>
+			<key>uid</key>
+			<string>BC1815E3-308D-4BA9-82D4-5D0E3D0ABEB2</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>./alfred-pubkey -refresh</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>3F2C92C5-FC2D-42EF-A622-6E966147BBD0</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
 		<dict>
 			<key>config</key>
 			<dict>
@@ -48,7 +136,7 @@
 				<key>escaping</key>
 				<integer>102</integer>
 				<key>keyword</key>
-				<string>go</string>
+				<string>pub</string>
 				<key>queuedelaycustom</key>
 				<integer>3</integer>
 				<key>queuedelayimmediatelyinitially</key>
@@ -60,15 +148,15 @@
 				<key>runningsubtext</key>
 				<string></string>
 				<key>script</key>
-				<string>./alfred-golink "$1"</string>
+				<string>./alfred-pubkey "$1"</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
 				<string></string>
 				<key>subtext</key>
-				<string>using tailscale golink</string>
+				<string>Get SSH public keys</string>
 				<key>title</key>
-				<string>go link</string>
+				<string>Public Keys</string>
 				<key>type</key>
 				<integer>0</integer>
 				<key>withspace</key>
@@ -77,49 +165,122 @@
 			<key>type</key>
 			<string>alfred.workflow.input.scriptfilter</string>
 			<key>uid</key>
-			<string>44F48C5A-4E38-43FD-B5AA-E32B1F30669F</string>
+			<string>73B58F39-DE72-4E9F-8667-1037E32A3058</string>
 			<key>version</key>
 			<integer>3</integer>
 		</dict>
 		<dict>
 			<key>config</key>
 			<dict>
-				<key>browser</key>
-				<string></string>
-				<key>skipqueryencode</key>
+				<key>argument</key>
+				<string>pub</string>
+				<key>leftcursor</key>
 				<false/>
-				<key>skipvarencode</key>
-				<false/>
-				<key>spaces</key>
-				<string></string>
-				<key>url</key>
-				<string></string>
 			</dict>
 			<key>type</key>
-			<string>alfred.workflow.action.openurl</string>
+			<string>alfred.workflow.utility.showalfred</string>
 			<key>uid</key>
-			<string>C1A2DE7D-CC5E-4351-B48A-41EDAFCD9E4B</string>
+			<string>A9330347-42C0-4D6E-9A6A-E26D0F927139</string>
 			<key>version</key>
 			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>conditions</key>
+				<array>
+					<dict>
+						<key>inputstring</key>
+						<string></string>
+						<key>matchcasesensitive</key>
+						<false/>
+						<key>matchmode</key>
+						<integer>0</integer>
+						<key>matchstring</key>
+						<string>refresh</string>
+						<key>outputlabel</key>
+						<string>refresh</string>
+						<key>uid</key>
+						<string>94563ECC-A0BF-418B-A31E-6F8540BCA373</string>
+					</dict>
+				</array>
+				<key>elselabel</key>
+				<string>copy</string>
+				<key>hideelse</key>
+				<false/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.utility.conditional</string>
+			<key>uid</key>
+			<string>1FF6F071-79FF-4FFF-A51D-BB8DA9E14D5F</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>autopaste</key>
+				<false/>
+				<key>clipboardtext</key>
+				<string>{query}</string>
+				<key>ignoredynamicplaceholders</key>
+				<false/>
+				<key>transient</key>
+				<false/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.output.clipboard</string>
+			<key>uid</key>
+			<string>C2FFD845-5693-49CC-96E2-D6EB911A26AC</string>
+			<key>version</key>
+			<integer>3</integer>
 		</dict>
 	</array>
 	<key>readme</key>
 	<string></string>
 	<key>uidata</key>
 	<dict>
-		<key>44F48C5A-4E38-43FD-B5AA-E32B1F30669F</key>
+		<key>1FF6F071-79FF-4FFF-A51D-BB8DA9E14D5F</key>
 		<dict>
 			<key>xpos</key>
-			<real>70</real>
+			<real>345</real>
 			<key>ypos</key>
-			<real>185</real>
-		</dict>
-		<key>C1A2DE7D-CC5E-4351-B48A-41EDAFCD9E4B</key>
-		<dict>
-			<key>xpos</key>
 			<real>275</real>
+		</dict>
+		<key>3F2C92C5-FC2D-42EF-A622-6E966147BBD0</key>
+		<dict>
+			<key>xpos</key>
+			<real>525</real>
 			<key>ypos</key>
-			<real>185</real>
+			<real>240</real>
+		</dict>
+		<key>73B58F39-DE72-4E9F-8667-1037E32A3058</key>
+		<dict>
+			<key>xpos</key>
+			<real>120</real>
+			<key>ypos</key>
+			<real>255</real>
+		</dict>
+		<key>A9330347-42C0-4D6E-9A6A-E26D0F927139</key>
+		<dict>
+			<key>xpos</key>
+			<real>725</real>
+			<key>ypos</key>
+			<real>270</real>
+		</dict>
+		<key>BC1815E3-308D-4BA9-82D4-5D0E3D0ABEB2</key>
+		<dict>
+			<key>xpos</key>
+			<real>495</real>
+			<key>ypos</key>
+			<real>170</real>
+		</dict>
+		<key>C2FFD845-5693-49CC-96E2-D6EB911A26AC</key>
+		<dict>
+			<key>xpos</key>
+			<real>500</real>
+			<key>ypos</key>
+			<real>395</real>
 		</dict>
 	</dict>
 	<key>userconfigurationconfig</key>

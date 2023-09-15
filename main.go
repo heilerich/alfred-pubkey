@@ -2,84 +2,71 @@ package main
 
 import (
 	"bufio"
-	"encoding/json"
+	"bytes"
 	"flag"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/exec"
-	"strings"
 	"time"
 
 	aw "github.com/deanishe/awgo"
+	"golang.org/x/crypto/ssh"
 )
 
 var (
-	wf         *aw.Workflow
-	doDownload bool
+	wf           *aw.Workflow
+	doDownload   bool
+	forceRefresh bool
 )
 
 func init() {
 	wf = aw.New()
-	flag.BoolVar(&doDownload, "download", false, "Download links")
+	flag.BoolVar(&doDownload, "download", false, "Download keys")
+	flag.BoolVar(&forceRefresh, "refresh", false, "Force download keys")
 }
 
 func run() {
 	query := wf.Args()[0]
 	flag.Parse()
 
-	ensureIconCache()
-
 	if doDownload {
 		wf.Configure(aw.TextErrors(true))
 		log.Printf("Background job")
-		if _, err := downloadLinks(); err != nil {
+		if _, err := downloadFile(); err != nil {
 			wf.FatalError(fmt.Errorf("error downloading links: %w", err))
 		}
 	}
 
-	splits := strings.SplitN(query, "/", 2)
-	search := splits[0]
-	path := ""
-
-	if len(splits) == 2 {
-		path = splits[1]
-	}
-
-	links, err := getLinks()
+	keys, err := getKeys()
 	if err != nil {
 		wf.FatalError(fmt.Errorf("error getting links: %w", err))
 	}
 
-	for _, link := range links {
-		item := wf.NewItem(link.Long).
-			Autocomplete(fmt.Sprintf("%s/%s", link.Short, path)).
-			Title(fmt.Sprintf("%s (%s)", link.Short, link.Owner)).
-			Subtitle(link.Long).
-			Arg(fmt.Sprintf("http://go/%s/%s", link.Short, path)).
-			Match(fmt.Sprintf("%s %s", link.Short, link.Long)).
-			Valid(true)
-
-		if hasIcon(link) {
-			item.Icon(&aw.Icon{Value: getIconPath(link)})
-		}
-
-		item.Alt().
-			Subtitle("Go to detail page.").
-			Arg(fmt.Sprintf("http://go/.detail/%s", link.Short)).
+	for _, key := range keys {
+		_ = wf.NewItem(key.KeyLine).
+			Autocomplete(key.Comment).
+			Title(key.Comment).
+			Subtitle(key.KeyLine).
+			Arg(key.KeyLine).
 			Valid(true)
 	}
 
-	if search != "" && len(links) > 0 {
-		wf.Filter(search)
+	_ = wf.NewItem("Refresh").
+		Autocomplete("refresh").
+		Title("Refresh").
+		Subtitle("Force refresh of keys").
+		Arg("refresh").
+		Valid(true)
+
+	if query != "" && len(keys) > 0 {
+		wf.Filter(query)
 	}
 
 	if !wf.IsRunning("download") && wf.IsEmpty() {
-		wf.NewItem("No links found").
-			Subtitle("Press enter to go to golink home page").
-			Arg("http://go").
-			Valid(true)
+		wf.NewItem("No keys found").
+			Valid(false)
 	}
 
 	wf.SendFeedback()
@@ -89,58 +76,72 @@ func main() {
 	wf.Run(run)
 }
 
-const linkCacheKey = "linkCache"
+const keysCacheKey = "pubkey-cache"
 
-type Link struct {
-	Short    string
-	Long     string
-	Created  time.Time
-	LastEdit time.Time
-	Owner    string
+type pubKey struct {
+	KeyLine string
+	Comment string
 }
 
-type LinkList []Link
+type keyList []pubKey
 
-func downloadLinks() (LinkList, error) {
+func downloadFile() (keyList, error) {
 	log.Printf("Downloading links")
 
-	resp, err := http.Get("http://go/.export")
+	resp, err := http.Get("https://git.io/heilek")
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
-	links := LinkList{}
+	keys := keyList{}
 
 	scanner := bufio.NewScanner(resp.Body)
+	buffer := bytes.NewBuffer([]byte{})
+
 	for scanner.Scan() {
-		var link Link
+		keyBytes := scanner.Bytes()
+		_, _ = buffer.Write(keyBytes)
+		_, _ = buffer.Write([]byte("\n"))
 
-		if err := json.Unmarshal(scanner.Bytes(), &link); err != nil {
-			return nil, err
+		for len(keyBytes) > 0 {
+			key, comment, _, rest, err := ssh.ParseAuthorizedKey(keyBytes)
+			keyBytes = rest
+			if err != nil {
+				wf.FatalError(fmt.Errorf("error parsing key file: %w", err))
+			}
+
+			keyString := string(ssh.MarshalAuthorizedKey(key))
+			if len(keyString) > 0 {
+				keys = append(keys, pubKey{
+					KeyLine: fmt.Sprintf("%s %s", keyString[:len(keyString)-1], comment),
+					Comment: comment,
+				})
+			}
 		}
+	}
 
-		links = append(links, link)
+	completeString := buffer.String()
+	if len(completeString) > 0 {
+		keys = append(keyList{pubKey{
+			KeyLine: completeString[:len(completeString)-1],
+			Comment: "All keys",
+		}}, keys...)
 	}
 
 	if err := scanner.Err(); err != nil {
 		wf.FatalError(fmt.Errorf("error scanning response: %w", err))
 	}
 
-	log.Printf("Downloaded %d links", len(links))
+	log.Printf("Downloaded %d pubkeys", len(keys))
 
-	if err = wf.Data.StoreJSON(linkCacheKey, links); err != nil {
+	if err = wf.Data.StoreJSON(keysCacheKey, keys); err != nil {
 		return nil, err
 	}
 
-	log.Printf("persisted links to cache")
+	log.Printf("persisted keys to cache")
 
-	if links.needIconDownload() {
-		log.Println("some links need icons")
-		links.downloadIcons()
-	}
-
-	return links, nil
+	return keys, nil
 }
 
 func backgroundDownload() {
@@ -156,25 +157,30 @@ func backgroundDownload() {
 	}
 }
 
-func getLinks() (LinkList, error) {
-	log.Printf("Getting links")
+func getKeys() (keyList, error) {
+	log.Printf("Getting keys")
 
-	if !wf.Data.Exists(linkCacheKey) {
+	if !wf.Data.Exists(keysCacheKey) {
 		log.Printf("Empty cache, downloading")
 		wf.NewItem("Refreshing data...").Valid(false)
 		backgroundDownload()
-		return []Link{}, nil
+		return keyList{}, nil
 	}
 
-	if wf.Data.Expired(linkCacheKey, 5*time.Second) {
+	if wf.Data.Expired(keysCacheKey, 24*time.Hour) {
 		log.Printf("Cache expired, refreshing in background")
 		backgroundDownload()
 	}
 
-	var links []Link
-	if err := wf.Data.LoadJSON(linkCacheKey, &links); err != nil {
+	if forceRefresh {
+		log.Printf("Forcing refresh")
+		backgroundDownload()
+	}
+
+	var keys keyList
+	if err := wf.Data.LoadJSON(keysCacheKey, &keys); err != nil {
 		return nil, err
 	}
 
-	return links, nil
+	return keys, nil
 }
